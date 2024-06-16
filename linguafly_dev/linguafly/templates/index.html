@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPE Translator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(to right, #75f5b9, #0c9bb4);
+        }
+
+        .box {
+            /* position: absolute; */
+            /* top: 50%;
+            left: 50%; */
+            /* transform: translate(-50%, -50%); */
+            border-radius: 1rem;
+            background-color: white;
+            width: 65%;
+            height: 20rem;
+            margin-top: 10rem;
+        }
+
+        #text-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            outline: none;
+            background-color: inherit;
+            font-size: 16px;
+
+        }
+
+        .toggle-header {
+            position: relative;
+            height: 3rem;
+            border-top-right-radius: 1rem;
+            border-top-left-radius: 1rem;
+            border-bottom: 2px solid rgb(157, 210, 200);
+            background-color: #f0f1f1;
+        }
+
+        textarea {
+            border: none;
+            background-color: inherit;
+            outline: none;
+            resize: none;
+        }
+
+        #sourceText, #translatedText {
+            width: 90%;
+            height: 220px;
+        }
+
+        .translate-button {
+            background-color: #0a9176;
+            border: none;
+            color: #ffffff;
+            padding: 8px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .translate-button:hover {
+            background-color: #0ceb9d;
+            /* Slightly darker peal on hover */
+        }
+
+        .box-col {
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12 d-flex justify-content-center">
+                <div class="box shadow-lg">
+                    <div class="container">
+                        <div class="row toggle-header d-flex justify-content-between text-center">
+                            <div class="col">
+
+                                <a href="" class="btn mt-1 fw-bold text-secondary">
+                                    <i class="bi-translate mt-2 h4 text-success"></i>
+                                    <span id="sourceLangLabel"></span>
+                                </a>
+                            </div>
+                            <div class="col-2">
+                                <button class="btn btn-light mt-2 btn-sm rounded-circle shadow-sm" id="switchButton">
+                                    <i class="bi-arrow-left-right"></i>
+                                </button>
+                            </div>
+                            <div class="col">
+                                <a href="" class="btn mt-1 fw-bold text-secondary">
+                                    <span id="targetLangLabel"></span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col box-col">
+                                <div class="input-container d-flex">
+                                    <textarea id="sourceText" class="mt-1 text-secondary"
+                                        placeholder="Enter text to translate"></textarea>
+                                    <div>
+                                        <a class="btn btn-sm rounded-circle" id="clearText" title="Clear Text"><i class="bi-x-lg"></i></a>
+                                    </div>
+                                </div>
+                                <div class="foot d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <button class="btn btn-light btn-sm rounded-circle shadow" id="recordButton">
+                                            <i class="bi-mic-fill h4 text-secondary"></i>
+                                        </button>
+                                        <!-- <button class="btn">
+                                            <i class="bi-volume-up h3 text-secondary"></i>
+                                        </button> -->
+                                    </div>
+                                    <div>
+                                        <button class="translate-button">Translate</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col box-col bg-light">
+                                <div class="input-container d-flex">
+                                    <textarea id="translatedText" class="mt-1 text-secondary w-100"
+                                        placeholder="" disabled></textarea>
+                                </div>
+                                <div class="foot d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <button class="btn">
+                                            <i class="bi-volume-up h3 text-secondary"></i>
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button class="btn">
+                                            <i class="bi-copy h5 text-secondary"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="translator-container">
+
+            <div class="output-container">
+                <p id="translatedText"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            
+            const sourceText = $("#sourceText");
+            const clearText = $("#clearText");
+            const translatedText = $("#translatedText");
+
+            // Adjust font size based on text length
+            sourceText.on("input", function () {
+                const textLength = $(this).val().length;
+                const fontSize = Math.max(14, 25 - Math.floor(textLength / 20));
+                $(this).css("font-size", fontSize + "px");
+            });
+
+            // Clear text on button click
+            clearText.click(function () {
+                sourceText.val("");
+                translatedText.text(""); // Clear translated text as well
+                sourceText.css("font-size", "14px"); // Reset font size
+            });
+           
+            var languages = {
+                "en": "English",
+                "fr": "French",
+                "pd": "Pidgin"
+            };
+
+            // Initial source and target languages
+            var sourceLang = "en";
+            var targetLang = "pd";
+
+            // Update UI based on current languages
+            updateLanguageLabels();
+
+            // Button click handler for switching paths
+            $("#switchButton").click(function() {
+                var temp = sourceLang;
+                sourceLang = targetLang;
+                targetLang = temp;
+
+                // Update UI based on new languages
+                updateLanguageLabels();
+            });
+
+            // const audioInput = $('#transcription-text');
+            const audioInput = $('#sourceText');
+            const recordButton = $('#recordButton');
+            const clearButton = $('#clearButton');
+            const sendButton = $('#sendButton');
+            const clearAllButton = $('#clearAllButton');
+            const displayText = $('#displayText');
+            const sentMessagesContainer = $('#sentMessagesContainer');
+            // Toggle between day and night modes
+            const toggleModeButton = $('#toggleModeButton');
+            toggleModeButton.click(function () {
+                $('body').toggleClass('night-mode');
+            });
+
+            let recognition;
+            let isRecording = false;
+
+            // Retrieve stored messages from local storage
+            const storedMessages = JSON.parse(localStorage.getItem('sentMessages')) || [];
+
+            // Display stored messages
+            storedMessages.forEach(message => {
+                appendMessage(message);
+            });
+
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+
+                recognition.onresult = function (event) {
+                    const result = event.results[event.results.length - 1];
+                    const transcription = result[0].transcript;
+
+                    audioInput.val(transcription);
+                    displayText.text(transcription);
+                };
+
+                recognition.onerror = function (event) {
+                    console.error('Speech recognition error:', event.error);
+                };
+
+                recognition.onend = function () {
+                    if (isRecording) {
+                        recognition.start();
+                    }
+                };
+
+                recordButton.click(function () {
+                    if (!isRecording) {
+                        isRecording = true;
+                        recognition.start();
+                        // recordButton.text('Stop Recording');
+                        recordButton.html('<i class="bi-stop-circle h4 text-danger"></i>');
+                        audioInput.attr('placeholder', 'Listening...')
+                        clearButton.prop('disabled', true);
+                       
+
+                        // Automatically stop recording after 90 seconds
+                        setTimeout(function () {
+                            isRecording = false;
+                            recognition.stop();
+                            // recordButton.text('Start Recording');
+                            recordButton.html('<i class="bi-mic-fill h4 text-secondary"></i>');
+                            clearButton.prop('disabled', false);
+                           
+
+                            // Process the transcribed text and send the message
+                            const transcribedText = audioInput.val();
+                            const message = { text: transcribedText, timestamp: new Date().toLocaleString() };
+                           
+
+                            // Append the message to the display and store it in local storage
+                            appendMessage(message);
+                            storedMessages.push(message);
+                            localStorage.setItem('sentMessages', JSON.stringify(storedMessages));
+
+                            // Clear the transcription area
+                            audioInput.val('');
+                            displayText.text('');
+                        }, 90000);
+                        console.log(audioInput.val());
+                    } else {
+                        isRecording = false;
+                        recognition.stop();
+                        // recordButton.text('Start Recording');
+                        audioInput.attr('placeholder', 'Enter text to translate')
+                        recordButton.html('<i class="bi-mic-fill h4 text-secondary"></i>');
+                        clearButton.prop('disabled', false);
+                    }
+                });
+
+                sendButton.click(function () {
+                    // Process the transcribed text and send the message
+                    const transcribedText = audioInput.val();
+                    const message = { text: transcribedText, timestamp: new Date().toLocaleString() };
+
+                    // Append the message to the display and store it in local storage
+                    appendMessage(message);
+                    storedMessages.push(message);
+                    localStorage.setItem('sentMessages', JSON.stringify(storedMessages));
+
+                    // Clear the transcription area
+                    audioInput.val('');
+                    displayText.text('');
+                });
+
+                clearAllButton.click(function () {
+                    // Clear all stored messages
+                    localStorage.removeItem('sentMessages');
+
+                    // Clear the displayed messages
+                    sentMessagesContainer.empty();
+                });
+
+                clearButton.click(function () {
+                    audioInput.val('');
+                    displayText.text('');
+                });
+            } else {
+                audioInput.val("Sorry, your browser doesn't support the Web Speech API. Please use a modern browser.");
+            }
+
+            // Function to append a single message with one timestamp to the sent messages container
+            function appendMessage(message) {
+                sentMessagesContainer.append(`
+            <div class="sent-message">
+                ${message.text}
+                <span class="timestamp">${message.timestamp}</span>
+            </div>`
+                );
+            }
+
+            function updateLanguageLabels() {
+                $("#sourceLangLabel").text(languages[sourceLang]);
+                $("#targetLangLabel").text(languages[targetLang]);
+                $("#sourceText").attr("placeholder", "Enter text in " + languages[sourceLang]);
+            }
+        });
+    </script>
+</body>
+
+</html>
