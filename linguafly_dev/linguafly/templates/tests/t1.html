@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text to Speech Example</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <textarea id="user-text" rows="5"></textarea>
+    <button id="speak-button">Speak Now</button>
+
+    <script>
+        $("#speak-button").click(function() {
+            // Get the text from the textarea
+            var text = $("#user-text").val();
+
+            // Check for browser compatibility
+            if ('speechSynthesis' in window) {
+                var utterance = new SpeechSynthesisUtterance(text);
+
+                // Speak the text
+                speechSynthesis.speak(utterance);
+            } else {
+                alert("Your browser doesn't support Text-to-Speech.");
+            }
+        });
+    </script>
+</body>
+</html>

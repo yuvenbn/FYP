@@ -16,11 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path , include
-from linguafly.views import index , transcribe_audio
+from linguafly.views import index , transcribe_audio, textTranslateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',index,name='index'),
-    path('transcribe/',transcribe_audio , name='transcribe_audio'),
+    path('', index, name='index'),
+    path('async-text-translate', textTranslateView, name='async-text-translate'),
+    path('transcribe/', transcribe_audio , name='transcribe_audio'),
     
 ]

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CPE Translator</title>
+    <title>LinguaFly</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
@@ -57,9 +57,11 @@
             resize: none;
         }
 
-        #sourceText, #translatedText {
+        #sourceText,
+        #translatedText {
             width: 90%;
             height: 220px;
+            font-size: 25px;
         }
 
         .translate-button {
@@ -81,12 +83,20 @@
         .box-col {
             border-radius: 1rem;
         }
+
+        .logo {
+            width: 100px;
+            border-radius: 10%;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="row justify-content-center">
+            <!-- <div class="col-md-12 d-flex justify-content-center m-0 align-items-center">
+                <div class="logo shadow-sm p-3 bg-none text-center">LinguaFly</div>
+            </div> -->
             <div class="col-md-12 d-flex justify-content-center">
                 <div class="box shadow-lg">
                     <div class="container">
@@ -116,7 +126,8 @@
                                     <textarea id="sourceText" class="mt-1 text-secondary"
                                         placeholder="Enter text to translate"></textarea>
                                     <div>
-                                        <a class="btn btn-sm rounded-circle" id="clearText" title="Clear Text"><i class="bi-x-lg"></i></a>
+                                        <a class="btn btn-sm rounded-circle" id="clearText" title="Clear Text"><i
+                                                class="bi-x-lg"></i></a>
                                     </div>
                                 </div>
                                 <div class="foot d-flex justify-content-between align-items-center">
@@ -129,23 +140,24 @@
                                         </button> -->
                                     </div>
                                     <div>
-                                        <button class="translate-button">Translate</button>
+                                        <button class="translate-button" id="translateButton">Translate</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="col box-col bg-light">
                                 <div class="input-container d-flex">
                                     <textarea id="translatedText" class="mt-1 text-secondary w-100"
-                                        placeholder="" disabled></textarea>
+                                        placeholder=""></textarea>
                                 </div>
                                 <div class="foot d-flex justify-content-between align-items-center">
                                     <div>
-                                        <button class="btn">
+                                        <button class="btn" class="btn btn-sm btn-light rounded-circle" id="readButton">
                                             <i class="bi-volume-up h3 text-secondary"></i>
                                         </button>
                                     </div>
                                     <div>
-                                        <button class="btn">
+                                        <button class="btn btn-sm btn-light rounded-circle" id="copyButton"
+                                            data-bs-toggle="tooltip" title="Copy to clipboard">
                                             <i class="bi-copy h5 text-secondary"></i>
                                         </button>
                                     </div>
@@ -156,23 +168,17 @@
                 </div>
             </div>
         </div>
-        <div class="translator-container">
-
-            <div class="output-container">
-                <p id="translatedText"></p>
-            </div>
-        </div>
     </div>
 
     <script>
         $(document).ready(function () {
-            
+
             const sourceText = $("#sourceText");
             const clearText = $("#clearText");
             const translatedText = $("#translatedText");
 
             // Adjust font size based on text length
-            sourceText.on("input", function () {
+            $('textarea').on("input change", function () {
                 const textLength = $(this).val().length;
                 const fontSize = Math.max(14, 25 - Math.floor(textLength / 20));
                 $(this).css("font-size", fontSize + "px");
@@ -184,7 +190,7 @@
                 translatedText.text(""); // Clear translated text as well
                 sourceText.css("font-size", "14px"); // Reset font size
             });
-           
+
             var languages = {
                 "en": "English",
                 "fr": "French",
@@ -199,7 +205,7 @@
             updateLanguageLabels();
 
             // Button click handler for switching paths
-            $("#switchButton").click(function() {
+            $("#switchButton").click(function () {
                 var temp = sourceLang;
                 sourceLang = targetLang;
                 targetLang = temp;
@@ -264,7 +270,7 @@
                         recordButton.html('<i class="bi-stop-circle h4 text-danger"></i>');
                         audioInput.attr('placeholder', 'Listening...')
                         clearButton.prop('disabled', true);
-                       
+
 
                         // Automatically stop recording after 90 seconds
                         setTimeout(function () {
@@ -273,12 +279,12 @@
                             // recordButton.text('Start Recording');
                             recordButton.html('<i class="bi-mic-fill h4 text-secondary"></i>');
                             clearButton.prop('disabled', false);
-                           
+
 
                             // Process the transcribed text and send the message
                             const transcribedText = audioInput.val();
                             const message = { text: transcribedText, timestamp: new Date().toLocaleString() };
-                           
+
 
                             // Append the message to the display and store it in local storage
                             appendMessage(message);
@@ -323,6 +329,62 @@
                     sentMessagesContainer.empty();
                 });
 
+                $('#translateButton').click(function () {
+                    var source_text = $('#sourceText').val();
+                    $.ajax({
+                        type: 'POST',
+                        url: '{% url "async-text-translate" %}',
+                        data: {
+                            'source_text': source_text,
+                            'source_lang': languages[sourceLang],
+                            'target_lang': languages[targetLang],
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.translated_text) {
+                                $('#translatedText').val(response.translated_text);
+                            } else {
+                                $('#translatedText').val(response.error);
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            $('#translatedText').text('An error occurred: ' + textStatus + ' (' + errorThrown + ')');
+                        }
+                    });
+                });
+
+                $("#copyButton").click(function () {
+                    var text = $("#translatedText").val();
+                    navigator.clipboard.writeText(text)
+                        .then(function () {
+                            console.log("Copied to clipboard successfully!");
+                            $("#copyButton").html('<i class="bi-check h5 text-success"></i>');
+                            setTimeout(function () {
+                                $("#copyButton").html('<i class="bi-copy h5 text-secondary"></i>');
+                            }, 2000);
+                        })
+                        .catch(function (err) {
+                            console.error("Failed to copy to clipboard:", err);
+                        });
+                });
+
+                $("#readButton").click(function () {
+                    // Get the text and selected voice
+                    var text = $("#translatedText").val();
+                    // var selectedVoice = $("#voice-select").val();
+
+                    if ('speechSynthesis' in window) {
+                        var utterance = new SpeechSynthesisUtterance(text);
+                        var voices = window.speechSynthesis.getVoices();
+                        utterance.voice = voices[95];
+                        console.log(utterance)
+                        console.log(text)
+                        // Speak the text
+                        speechSynthesis.speak(utterance);
+                    } else {
+                        alert("Your browser doesn't support Text-to-Speech.");
+                    }
+                });
                 clearButton.click(function () {
                     audioInput.val('');
                     displayText.text('');
