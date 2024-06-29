@@ -35,8 +35,6 @@ def textTranslateView(request):
         return JsonResponse({'translated_text': translated_text})
   
 
-
-def transcribe_audio(request):
     if request.method == 'POST':
         transcription = request.POST.get('transcription', '')
 

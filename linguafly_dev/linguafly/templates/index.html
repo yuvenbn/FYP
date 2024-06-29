@@ -73,6 +73,7 @@
             cursor: pointer;
             font-size: 12px;
             font-weight: bold;
+            width: 80px;
         }
 
         .translate-button:hover {
@@ -140,7 +141,9 @@
                                         </button> -->
                                     </div>
                                     <div>
-                                        <button class="translate-button" id="translateButton">Translate</button>
+                                        <button class="translate-button" id="translateButton">
+                                            <span>Translate</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -194,7 +197,7 @@
             var languages = {
                 "en": "English",
                 "fr": "French",
-                "pd": "Pidgin"
+                "pd": "Cameroon Pidgin"
             };
 
             // Initial source and target languages
@@ -222,6 +225,7 @@
             const clearAllButton = $('#clearAllButton');
             const displayText = $('#displayText');
             const sentMessagesContainer = $('#sentMessagesContainer');
+
             // Toggle between day and night modes
             const toggleModeButton = $('#toggleModeButton');
             toggleModeButton.click(function () {
@@ -306,31 +310,11 @@
                     }
                 });
 
-                sendButton.click(function () {
-                    // Process the transcribed text and send the message
-                    const transcribedText = audioInput.val();
-                    const message = { text: transcribedText, timestamp: new Date().toLocaleString() };
-
-                    // Append the message to the display and store it in local storage
-                    appendMessage(message);
-                    storedMessages.push(message);
-                    localStorage.setItem('sentMessages', JSON.stringify(storedMessages));
-
-                    // Clear the transcription area
-                    audioInput.val('');
-                    displayText.text('');
-                });
-
-                clearAllButton.click(function () {
-                    // Clear all stored messages
-                    localStorage.removeItem('sentMessages');
-
-                    // Clear the displayed messages
-                    sentMessagesContainer.empty();
-                });
-
                 $('#translateButton').click(function () {
                     var source_text = $('#sourceText').val();
+                    $('#translateButton').html(
+                        '<span class="spinner-border spinner-border-sm " role="status" aria-hidden="true"></span>'
+                     ).prop('disabled', true);
                     $.ajax({
                         type: 'POST',
                         url: '{% url "async-text-translate" %}',
@@ -346,9 +330,11 @@
                             } else {
                                 $('#translatedText').val(response.error);
                             }
+                            $('#translateButton').html('<span>Translate</span>').prop('disabled', false);
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
                             $('#translatedText').text('An error occurred: ' + textStatus + ' (' + errorThrown + ')');
+                            $('#translateButton').html('<span>Translate</span>').prop('disabled', false);
                         }
                     });
                 });
@@ -377,8 +363,6 @@
                         var utterance = new SpeechSynthesisUtterance(text);
                         var voices = window.speechSynthesis.getVoices();
                         utterance.voice = voices[95];
-                        console.log(utterance)
-                        console.log(text)
                         // Speak the text
                         speechSynthesis.speak(utterance);
                     } else {
